@@ -1,0 +1,55 @@
+import sys
+import re
+import os
+import shutil
+
+# 适用格式 [作品类型(作者)]
+def move_folder(path):
+	# 拆分目录
+	path_nums = path.split("\\")
+
+	# 待修改文件夹名字
+	name = path_nums.pop()
+
+	# 拼接为所在父目录
+	father_path = "\\".join(path_nums)
+	# print("name=",name)
+
+	# 从path中正则提取[]中的类型作者信息
+	type_author = re.search(r"(?<=\[)(.+?)(?=\])",name).group(0).strip()
+	# print("type_author=",type_author)
+
+	# 未找到作者，格式不标准或本身未标注作者信息
+	if ('(' in type_author):
+		# 从类型作者中提取出()中作者信息
+		author = re.search(r"(?<=\()(.+?)(?=\))",type_author).group(0).strip()
+	else:
+		author = "Other"
+
+	# 需要创建的作者目录
+	new_folder = father_path + '\\' + author
+
+	# 判断文件夹是否存在
+	if not os.path.exists(new_folder):
+		# 创建文件夹
+		os.mkdir(new_folder)
+
+	# 移动文件夹到作者目录下
+	new_path = new_folder.strip() + '\\' + name
+	
+	if not os.path.exists(new_path):
+		shutil.move(path, new_path)
+		# print("Python move ",path," to ",new_path)
+	else:
+		print(new_path," is exist!")
+	return
+
+if len(sys.argv) > 1:
+	# 获取命令行参数
+	move_folder(sys.argv[1])
+else:
+	# 直接运行移动当前目录下的文件夹
+	folder_list = os.listdir(os.getcwd())
+	for folder_item in folder_list:
+		if ('[' in folder_item and ']' in folder_item ):
+			move_folder(os.getcwd() + "\\" + folder_item)
