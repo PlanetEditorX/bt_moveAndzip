@@ -42,6 +42,19 @@ def move_folder(path):
 		# print("Python move ",path," to ",new_path)
 	else:
 		print(new_path," is exist!")
+
+	zip_file(new_path)
+	return
+
+# 压缩文件夹
+# path 要压缩的文件夹具体路径
+def zip_file(path):
+	if not os.path.exists(path+".zip"):
+		shutil.make_archive(path, 'zip', path)
+	else:
+		print(path+".zip is exist!")
+	# 递归删除文件夹
+	shutil.rmtree(path)
 	return
 
 if len(sys.argv) > 1:
@@ -53,3 +66,4 @@ else:
 	for folder_item in folder_list:
 		if ('[' in folder_item and ']' in folder_item ):
 			move_folder(os.getcwd() + "\\" + folder_item)
+
