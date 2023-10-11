@@ -20,9 +20,13 @@ def move_folder(path):
 	# print("type_author=",type_author)
 
 	# 未找到作者，格式不标准或本身未标注作者信息
-	if ('(' in type_author):
+	if ('(' in type_author and ')' in type_author):
 		# 从类型作者中提取出()中作者信息
 		author = re.search(r"(?<=\()(.+?)(?=\))",type_author).group(0).strip()
+	# 仅有类型或仅有作者，以类型/作者分类
+	elif (type_author.replace(' ','').isalnum()):
+		author = type_author
+	# 其它情况
 	else:
 		author = "Other"
 
