@@ -19,12 +19,15 @@ def move_folder(path):
 	type_author = re.search(r"(?<=\[)(.+?)(?=\])",name).group(0).strip()
 	# print("type_author=",type_author)
 
+	# 定义排除类型
+	unexpect_type = ["中国翻訳","中国翻译","翻译","翻訳","DL版","DL"]
+
 	# 未找到作者，格式不标准或本身未标注作者信息
 	if ('(' in type_author and ')' in type_author):
 		# 从类型作者中提取出()中作者信息
 		author = re.search(r"(?<=\()(.+?)(?=\))",type_author).group(0).strip()
-	# 仅有类型或仅有作者，以类型/作者分类
-	elif (type_author.replace(' ','').isalnum()):
+	# 仅有类型或仅有作者，以类型/作者分类,除去空格后只有字母和数字进入条件
+	elif (type_author.replace(' ','').isalnum() and type_author not in unexpect_type):
 		author = type_author
 	# 其它情况
 	else:
