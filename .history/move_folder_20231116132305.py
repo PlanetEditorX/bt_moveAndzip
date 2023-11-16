@@ -67,6 +67,7 @@ def zip_file(path):
 if len(sys.argv) > 1:
 	# 获取命令行参数
 	move_folder(sys.argv[1])
+	print("name=", sys.argv[1])
 
 else:
 	# 直接运行移动当前目录下的文件夹

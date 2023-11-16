@@ -13,7 +13,7 @@ def move_folder(path):
 
 	# 拼接为所在父目录
 	father_path = "\\".join(path_nums)
-	print("name=",name)
+	# print("name=",name)
 
 	# 从path中正则提取[]中的类型作者信息
 	type_author = re.search(r"(?<=\[)(.+?)(?=\])",name).group(0).strip()
@@ -67,7 +67,6 @@ def zip_file(path):
 if len(sys.argv) > 1:
 	# 获取命令行参数
 	move_folder(sys.argv[1])
-
 else:
 	# 直接运行移动当前目录下的文件夹
 	folder_list = os.listdir(os.getcwd())
