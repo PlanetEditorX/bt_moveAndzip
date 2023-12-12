@@ -19,7 +19,7 @@ def move_folder(path):
 	if (re.search(r"(?<=\[)(.+?)(?=\])",name)):
 		type_author = re.search(r"(?<=\[)(.+?)(?=\])", name).group(0).strip()
 	elif (re.search(r"(?<=【)(.+?)(?=】)", name)):
-		type_author = re.search(r"(?<=【)(.+?)(?=\】)",name).group(0).strip()
+		type_author = re.search(r"(?<=\[)(.+?)(?=\])",name).group(0).strip()
 	# print("type_author=",type_author)
 
 	# 定义排除类型

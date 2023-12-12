@@ -16,10 +16,7 @@ def move_folder(path):
 	print("name=",name)
 
 	# 从path中正则提取[]中的类型作者信息
-	if (re.search(r"(?<=\[)(.+?)(?=\])",name)):
-		type_author = re.search(r"(?<=\[)(.+?)(?=\])", name).group(0).strip()
-	elif (re.search(r"(?<=【)(.+?)(?=】)", name)):
-		type_author = re.search(r"(?<=【)(.+?)(?=\】)",name).group(0).strip()
+	type_author = re.search(r"(?<=\[)(.+?)(?=\])",name).group(0).strip()
 	# print("type_author=",type_author)
 
 	# 定义排除类型
@@ -75,6 +72,6 @@ else:
 	# 直接运行移动当前目录下的文件夹
 	folder_list = os.listdir(os.getcwd())
 	for folder_item in folder_list:
-		if ('[' in folder_item and ']' in folder_item or '【' in folder_item and '】' in folder_item):
+		if ('[' in folder_item and ']' in folder_item or '【' in folder_item and ']' in folder_item):
 			move_folder(os.getcwd() + "\\" + folder_item)
 
