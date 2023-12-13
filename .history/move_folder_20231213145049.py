@@ -94,7 +94,7 @@ def unzip_file(path):
 		# 获取作者英文信息，并单词首字母大写
 		author = conObject['tags']['artist'][0].title()
 		if ("|" in author):
-			# 多个作者信息时取第一项，并删除空格
+			# 多个作者信息时取第一项
 			author = author.split("|")[0].replace(' ', '')
 	# 未获取到变量
 	except KeyError:

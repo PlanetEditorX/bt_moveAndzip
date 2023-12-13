@@ -41,7 +41,6 @@ def move_folder(path):
 			# 从类型作者中提取出()中作者信息
 			author = re.search(r"(?<=\()(.+?)(?=\))",type_author).group(0).strip()
 		# 仅有类型或仅有作者，以类型/作者分类,除去空格后只有字母和数字进入条件
-		# isalnum() 方法检测字符串是否由字母和数字组成,如果 string 至少有一个字符并且所有字符都是字母或数字则返回 True,否则返回 False
 		elif (type_author.replace(' ','').isalnum() and type_author not in unexpect_type):
 			author = type_author
 		# 其它情况
@@ -93,9 +92,7 @@ def unzip_file(path):
 				conObject = json.loads(info.read().decode('utf-8'))['gallery_info']
 		# 获取作者英文信息，并单词首字母大写
 		author = conObject['tags']['artist'][0].title()
-		if ("|" in author):
-			# 多个作者信息时取第一项，并删除空格
-			author = author.split("|")[0].replace(' ', '')
+		if ("")
 	# 未获取到变量
 	except KeyError:
 		print("This ZIP file does not contain author information")
