@@ -2,6 +2,8 @@ import sys
 import re
 import os
 import shutil
+import zipfile
+import json
 
 # 适用格式 [作品类型(作者)]
 def move_folder(path):
@@ -15,26 +17,35 @@ def move_folder(path):
 	father_path = "\\".join(path_nums)
 	print("name=",name)
 
-	# 从path中正则提取[]中的类型作者信息
-	if (re.search(r"(?<=\[)(.+?)(?=\])",name)):
-		type_author = re.search(r"(?<=\[)(.+?)(?=\])", name).group(0).strip()
-	elif (re.search(r"(?<=【)(.+?)(?=】)", name)):
-		type_author = re.search(r"(?<=【)(.+?)(?=\】)",name).group(0).strip()
-	# print("type_author=",type_author)
+	# 判断是否是zip文件
+	flag_zip = 0
+	# 作者名字
+	author = ''
+	# 如果是zip文件
+	if (os.path.splitext(name)[-1].lower() == '.zip'):
+		flag_zip = 1
+		author = unzip_file(path)
+	# 如果未获取到作者信息
+	if (author == ''):
+		# 从path中正则提取[]中的类型作者信息
+		if (re.search(r"(?<=\[)(.+?)(?=\])",name)):
+			type_author = re.search(r"(?<=\[)(.+?)(?=\])", name).group(0).strip()
+		elif (re.search(r"(?<=【)(.+?)(?=】)", name)):
+			type_author = re.search(r"(?<=【)(.+?)(?=\】)",name).group(0).strip()
 
-	# 定义排除类型
-	unexpect_type = ["中国翻訳","中国翻译","翻译","翻訳","DL版","DL"]
+		# 定义排除类型
+		unexpect_type = ["中国翻訳","中国翻译","翻译","翻訳","DL版","DL"]
 
-	# 未找到作者，格式不标准或本身未标注作者信息
-	if ('(' in type_author and ')' in type_author):
-		# 从类型作者中提取出()中作者信息
-		author = re.search(r"(?<=\()(.+?)(?=\))",type_author).group(0).strip()
-	# 仅有类型或仅有作者，以类型/作者分类,除去空格后只有字母和数字进入条件
-	elif (type_author.replace(' ','').isalnum() and type_author not in unexpect_type):
-		author = type_author
-	# 其它情况
-	else:
-		author = "Other"
+		# 未找到作者，格式不标准或本身未标注作者信息
+		if ('(' in type_author and ')' in type_author):
+			# 从类型作者中提取出()中作者信息
+			author = re.search(r"(?<=\()(.+?)(?=\))",type_author).group(0).strip()
+		# 仅有类型或仅有作者，以类型/作者分类,除去空格后只有字母和数字进入条件
+		elif (type_author.replace(' ','').isalnum() and type_author not in unexpect_type):
+			author = type_author
+		# 其它情况
+		else:
+			author = "Other"
 
 	# 需要创建的作者目录
 	new_folder = father_path + '\\' + author
@@ -45,15 +56,19 @@ def move_folder(path):
 		os.mkdir(new_folder)
 
 	# 移动文件夹到作者目录下
+	# 创建移动后文件夹目录
 	new_path = new_folder.strip() + '\\' + name
-
+	# 判断移动后目录是否存在
 	if not os.path.exists(new_path):
+		# 进行移动操作
 		shutil.move(path, new_path)
 		# print("Python move ",path," to ",new_path)
 	else:
 		print(new_path," is exist!")
 
-	zip_file(new_path)
+	# 如果不是zip文件
+	if (flag_zip == 0):
+		zip_file(new_path)
 	return
 
 # 压缩文件夹
@@ -66,6 +81,22 @@ def zip_file(path):
 	# 递归删除文件夹
 	shutil.rmtree(path)
 	return
+
+# 解压zip文件
+# path 压缩包具体地址
+def unzip_file(path):
+	print(path, " is zip file")
+	try:
+		with zipfile.ZipFile(path, "r") as zip_ref:
+			with zip_ref.open("info.json") as info:
+				conObject = json.loads(info.read().decode('utf-8'))['gallery_info']
+		# 获取作者英文信息，并单词首字母大写
+		author = conObject['tags']['artist'][0].title()
+	# 未获取到变量
+	except KeyError:
+		print("This ZIP file does not contain author information")
+		author = ''
+	return author
 
 if len(sys.argv) > 1:
 	# 获取命令行参数
