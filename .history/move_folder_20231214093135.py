@@ -21,7 +21,6 @@ def move_folder(path):
 	flag_zip = 0
 	# 作者名字
 	author = ''
-	type_author = ''
 	# 如果是zip文件
 	if (os.path.splitext(name)[-1].lower() == '.zip'):
 		flag_zip = 1
@@ -111,6 +110,6 @@ else:
 	# 直接运行移动当前目录下的文件夹
 	folder_list = os.listdir(os.getcwd())
 	for folder_item in folder_list:
-		if ('[' in folder_item and ']' in folder_item or '【' in folder_item and '】' in folder_item or os.path.splitext(folder_item)[-1].lower() == '.zip'):
+		if ('[' in folder_item and ']' in folder_item or '【' in folder_item and '】' in folder_item or ):
 			move_folder(os.getcwd() + "\\" + folder_item)
 

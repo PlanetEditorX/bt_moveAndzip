@@ -21,7 +21,6 @@ def move_folder(path):
 	flag_zip = 0
 	# 作者名字
 	author = ''
-	type_author = ''
 	# 如果是zip文件
 	if (os.path.splitext(name)[-1].lower() == '.zip'):
 		flag_zip = 1
