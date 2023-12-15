@@ -99,7 +99,7 @@ def unzip_file(path):
 			author = author.split("|")[0].replace(' ', '')
 	# 未获取到变量
 	except KeyError:
-		print("This ZIP file (" + path + ") does not contain author information")
+		print("This ZIP file (" + path + " does not contain author information")
 		author = ''
 	return author
 
