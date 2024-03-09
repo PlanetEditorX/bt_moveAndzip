@@ -101,6 +101,10 @@ def unzip_file(path):
 	except KeyError:
 		print("This ZIP file (" + path + ") does not contain author information")
 		author = ''
+	# JSONDecodeError异常
+	except json.decoder.JSONDecodeError as e:
+		print("JSONDecodeError:", str(e))
+		author = ''
 	return author
 
 if len(sys.argv) > 1:

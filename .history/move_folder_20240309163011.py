@@ -21,6 +21,7 @@ def move_folder(path):
 	flag_zip = 0
 	# 作者名字
 	author = ''
+	type_author = ''
 	# 如果是zip文件
 	if (os.path.splitext(name)[-1].lower() == '.zip'):
 		flag_zip = 1
@@ -94,11 +95,14 @@ def unzip_file(path):
 		# 获取作者英文信息，并单词首字母大写
 		author = conObject['tags']['artist'][0].title()
 		if ("|" in author):
-			# 多个作者信息时取di'yi'x
+			# 多个作者信息时取第一项，并删除空格
 			author = author.split("|")[0].replace(' ', '')
 	# 未获取到变量
 	except KeyError:
-		print("This ZIP file does not contain author information")
+		print("This ZIP file (" + path + ") does not contain author information")
+		author = ''
+	except JSONDecodeError:
+		print("This ZIP file (" + path + ") does not contain author information")
 		author = ''
 	return author
 
@@ -110,6 +114,6 @@ else:
 	# 直接运行移动当前目录下的文件夹
 	folder_list = os.listdir(os.getcwd())
 	for folder_item in folder_list:
-		if ('[' in folder_item and ']' in folder_item or '【' in folder_item and '】' in folder_item):
+		if ('[' in folder_item and ']' in folder_item or '【' in folder_item and '】' in folder_item or os.path.splitext(folder_item)[-1].lower() == '.zip'):
 			move_folder(os.getcwd() + "\\" + folder_item)
 

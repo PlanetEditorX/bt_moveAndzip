@@ -21,6 +21,7 @@ def move_folder(path):
 	flag_zip = 0
 	# 作者名字
 	author = ''
+	type_author = ''
 	# 如果是zip文件
 	if (os.path.splitext(name)[-1].lower() == '.zip'):
 		flag_zip = 1
@@ -98,7 +99,10 @@ def unzip_file(path):
 			author = author.split("|")[0].replace(' ', '')
 	# 未获取到变量
 	except KeyError:
-		print("This ZIP file does not contain author information")
+		print("This ZIP file (" + path + ") does not contain author information")
+		author = ''
+		except KeyError:
+		print("This ZIP file (" + path + ") does not contain author information")
 		author = ''
 	return author
 
