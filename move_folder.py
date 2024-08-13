@@ -4,6 +4,7 @@ import os
 import shutil
 import zipfile
 import json
+from datetime import datetime
 
 # 适用格式 [作品类型(作者)]
 def move_folder(path):
@@ -26,6 +27,11 @@ def move_folder(path):
 	if (os.path.splitext(name)[-1].lower() == '.zip'):
 		flag_zip = 1
 		author = unzip_file(path)
+	# 如果是cbz文件
+	elif(os.path.splitext(name)[-1].lower() == '.cbz'):
+		flag_zip = 2
+		author = uncbz_file(path)
+
 	# 如果未获取到作者信息
 	if (author == ''):
 		# 从path中正则提取[]中的类型作者信息
@@ -60,16 +66,25 @@ def move_folder(path):
 	# 移动文件夹到作者目录下
 	# 创建移动后文件夹目录
 	new_path = new_folder.strip() + '\\' + name
+	if (flag_zip == 2):
+		f_path = path.split(".cbz")[0]
+		new_path = new_path.split(".cbz")[0]
+
 	# 判断移动后目录是否存在
 	if not os.path.exists(new_path):
 		# 进行移动操作
-		shutil.move(path, new_path)
-		# print("Python move ",path," to ",new_path)
+		if (flag_zip == 0 or flag_zip == 1):
+			shutil.move(path, new_path)
+		elif (flag_zip == 2):
+			# 删除cbz包
+			os.remove(path)
+			# 移动文件夹到作者目录下
+			shutil.move(f_path, new_path.split(".cbz")[0])
 	else:
 		print(new_path," is exist!")
 
 	# 如果不是zip文件
-	if (flag_zip == 0):
+	if (flag_zip == 0 or flag_zip == 2):
 		zip_file(new_path)
 	return
 
@@ -106,6 +121,95 @@ def unzip_file(path):
 		print("JSONDecodeError:", str(e))
 		author = ''
 	return author
+
+# 解压cbz文件
+# path 压缩包具体地址
+def uncbz_file(path):
+	print(path, " is cbz file")
+	try:
+		newFolder = path.split(".cbz")[0]
+		# 解压cbz文件，默认插件下载的格式为xxx.cbz/xxxx/01.jpg
+		zip = zipfile.ZipFile(path)
+		folderName = zip.namelist()[0].split("/")[0] # 非标准文件夹名字
+		output = os.path.dirname(path)  # 默认解压到当前目录同名文件夹中
+		zip.extractall(output)   # 会被解压到输入的路径中
+		zip.close()
+		# 重命名为标准文件夹名
+		os.rename(output + '\\' + folderName, newFolder)
+
+		# 读取信息
+		shutil.copy(os.path.dirname(os.path.realpath(__file__)) + '\\ComicInfo.xml', newFolder)
+		with open(newFolder + '\\ComicInfo.xml', encoding = "utf-8") as file:
+			content = file.read()
+
+		with open(newFolder + '\\info.txt', 'r',  encoding = "utf-8") as f:
+			lines = f.readlines()
+			# Title：000是英文，001是日文
+			content = content.replace('$01', lines[1][:-1])
+			# Notes：备注
+			content = content.replace('$02', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+			# 日期处理 保留XXXX-XX-XX
+			fileTime = lines[6][8:-7].split('-')
+			# Year：年份
+			content = content.replace('$03', fileTime[0])
+			# Month：月份
+			content = content.replace('$04', fileTime[1])
+			# Day：天
+			content = content.replace('$05', fileTime[2])
+			# Writer：作者
+			author = str_tag(lines, 0)
+			content = content.replace('$06', author)
+			# Tags：标签
+			content = content.replace('$07', str_tag(lines, 1))
+			# Web：网页
+			content = content.replace('$08', lines[2][:-1])
+			# PageCount：页数
+			content = content.replace('$09', re.findall(r'\d+', lines[11])[0])
+			# LanguageISO：语言
+			content = content.replace('$10', 'zh')
+			# Format：格式
+			content = content.replace('$11', 'Digital')
+			# Manga：管理
+			content = content.replace('$12', 'Yes')
+			# Characters：分类
+			content = content.replace('$13', lines[4][10:-1])
+
+		with open(newFolder + '\\ComicInfo.xml',"w",encoding="utf-8") as f:
+			f.write(content)
+
+	# 未获取到变量
+	except KeyError:
+		print("This CBZ file (" + path + ") does not contain author information")
+		author = ''
+	# JSONDecodeError异常
+	except json.decoder.JSONDecodeError as e:
+		print("JSONDecodeError:", str(e))
+		author = ''
+	# 未找到文件
+	except FileNotFoundError:
+		print("This file not found")
+		author = ''
+	return author.title()
+
+# 标签处理
+def str_tag(lines, index):
+	content = ''
+	flag = 0
+	for line in lines:
+		if flag == 1 and '>' in line:
+			content = content + line.split(':')[1][:-1].strip() + ','
+			# 返回作者
+			if index == 0 and 'artist' in line:
+				return line[10:-1].title()
+
+		elif re.search('Tags:', line):
+			flag = 1
+		else:
+			flag = 0
+			if not len(content) == 0:
+				break
+	return content[:-1]
+
 
 if len(sys.argv) > 1:
 	# 获取命令行参数
