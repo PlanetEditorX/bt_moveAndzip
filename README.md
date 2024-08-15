@@ -7,6 +7,7 @@
 
 - 适用于Tsuk1ko/nhentai-helper相关下载，格式为zip包，并包含info.json信息
 - 相关作者数据取之于info.json中的信息，未找到相关信息从文件名'[作者]'中提取相关信息作为作者信息
+- 适配MapoMagpie/eh-view-enhance相关下载，包含meta.json信息，此方式下载无漫画时间数据
 
 # cab压缩包
 

@@ -117,9 +117,9 @@ def get_form_info(path):
 	try:
 		with zipfile.ZipFile(path, "r") as zip_ref:
 			with zip_ref.open("info.json") as info:
-				conObject = json.loads(info.read().decode('utf-8'))['gallery_info']
+				conentObject = json.loads(info.read().decode('utf-8'))['gallery_info']
 		# 获取作者英文信息，并单词首字母大写
-		author = conObject['tags']['artist'][0].title()
+		author = conentObject['tags']['artist'][0].title()
 		if ("|" in author):
 			# 多个作者信息时取第一项，并删除空格
 			author = author.split("|")[0].replace(' ', '')
@@ -139,12 +139,13 @@ def get_form_meta(path):
 	try:
 		with zipfile.ZipFile(path, "r") as zip_ref:
 			with zip_ref.open("meta.json") as info:
-				conObject = json.loads(info.read().decode('utf-8'))
+				conentObject = json.loads(info.read().decode('utf-8'))
 		# 获取作者英文信息，并单词首字母大写
-		author = conObject['tags']['artist'][0].title()
+		author = conentObject['tags']['artist'][0].title()
 		if ("|" in author):
 			# 多个作者信息时取第一项，并删除空格
 			author = author.split("|")[0].replace(' ', '')
+		add_Comicinfo(path, conentObject)
 	# 未获取到变量
 	except KeyError:
 		print("This ZIP file (" + path + ") does not contain author information")
@@ -154,6 +155,74 @@ def get_form_meta(path):
 		print("JSONDecodeError:", str(e))
 		author = ''
 	return author
+
+# 提取信息
+def add_Comicinfo(path, obj):
+	output = os.path.dirname(path)  # 当前目录文件夹
+	comicinfo_exists(output) # 生成模板文件
+	output_modelfile = output + '\\ComicInfo.xml'
+	# 读取信息
+	with open(output_modelfile, encoding = "utf-8") as file:
+		content = file.read()
+
+	# Title：000是英文，001是日文
+	content = content.replace('$01', obj['originTitle'])
+	# Notes：备注
+	content = content.replace('$02', 'Created by Eh-View-Enhance (MapoMagpie/eh-view-enhance)')
+	content = content.replace('$03', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+	# 日期处理：该插件并无日期元数据
+	# Year：年份
+	content = content.replace('$04','')
+	# Month：月份
+	content = content.replace('$05', '')
+	# Day：天
+	content = content.replace('$06', '')
+	# Writer：作者
+	content = content.replace('$07', obj['tags']['artist'][0].title())
+	# Tags：标签
+	content = content.replace('$08', list_str(obj['tags'], ['language','parody','character','group','male','female','other']))
+	# Web：网页
+	content = content.replace('$09', obj['url'])
+	# PageCount：页数
+	content = content.replace('$10', str(get_files_from_zip(path)))
+	# LanguageISO：语言
+	content = content.replace('$11', 'zh')
+	# Format：格式
+	content = content.replace('$12', 'Digital')
+	# Manga：管理
+	content = content.replace('$13', 'Yes')
+	# Characters：分类
+	content = content.replace('$14', list_str(obj['tags'], ['character']))
+	# 写入文件
+	with open(output_modelfile,"w",encoding="utf-8") as f:
+		f.write(content)
+
+	# 向ZIP文件中添加文件
+	with zipfile.ZipFile(path, 'a', zipfile.ZIP_DEFLATED) as zipf:
+		zipf.write(output_modelfile, arcname='ComicInfo.xml')
+
+	# 删除生成的模板文件
+	if os.path.exists(output_modelfile):
+		os.remove(output_modelfile)
+	return
+
+# 指定数组转字符串
+def list_str(obj,list):
+	content = ''
+	for name in list:
+		if name in list:
+			content = content + ','.join([str(x) for x in obj[name]]) + ','
+
+	return content[:-1]
+
+# 获取压缩包文件数量
+def get_files_from_zip(zip_file_path):
+	file_list = []
+	with zipfile.ZipFile(zip_file_path, 'r') as z:
+		file_list = z.namelist()
+	# 去除数据，只保留图片计算数量
+	file_list.remove('meta.json')
+	return len(file_list)
 
 # 判断压缩包是否包含指定文件
 # zip_path：压缩包路径
@@ -190,32 +259,33 @@ def uncbz_file(path):
 			# Title：000是英文，001是日文
 			content = content.replace('$01', lines[1][:-1])
 			# Notes：备注
-			content = content.replace('$02', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+			content = content.replace('$02', 'Created by E-Hentai Downloader (ccloli/E-Hentai-Downloader)')
+			content = content.replace('$03', datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 			# 日期处理 保留XXXX-XX-XX
 			fileTime = lines[6][8:-7].split('-')
 			# Year：年份
-			content = content.replace('$03', fileTime[0])
+			content = content.replace('$04', fileTime[0])
 			# Month：月份
-			content = content.replace('$04', fileTime[1])
+			content = content.replace('$05', fileTime[1])
 			# Day：天
-			content = content.replace('$05', fileTime[2])
+			content = content.replace('$06', fileTime[2])
 			# Writer：作者
 			author = str_tag(lines, 0)
-			content = content.replace('$06', author)
+			content = content.replace('$07', author)
 			# Tags：标签
-			content = content.replace('$07', str_tag(lines, 1))
+			content = content.replace('$08', str_tag(lines, 1))
 			# Web：网页
-			content = content.replace('$08', lines[2][:-1])
+			content = content.replace('$09', lines[2][:-1])
 			# PageCount：页数
-			content = content.replace('$09', re.findall(r'\d+', lines[11])[0])
+			content = content.replace('$10', re.findall(r'\d+', lines[11])[0])
 			# LanguageISO：语言
-			content = content.replace('$10', 'zh')
+			content = content.replace('$11', 'zh')
 			# Format：格式
-			content = content.replace('$11', 'Digital')
+			content = content.replace('$12', 'Digital')
 			# Manga：管理
-			content = content.replace('$12', 'Yes')
+			content = content.replace('$13', 'Yes')
 			# Characters：分类
-			content = content.replace('$13', lines[4][10:-1])
+			content = content.replace('$14', lines[4][10:-1])
 
 		with open(newFolder + '\\ComicInfo.xml',"w",encoding="utf-8") as f:
 			f.write(content)
@@ -255,7 +325,7 @@ def str_tag(lines, index):
 
 # 模板文件是否存在
 def comicinfo_exists(path):
-	modulefile_path = os.path.dirname(os.path.realpath(__file__)) + '\\ComicInfo.xml'
+	modulefile_path = os.path.dirname(os.path.realpath(__file__)) + '\\model\\ComicInfo.xml'
 	comicinfo_path = path + '\\ComicInfo.xml'
 	if not os.path.exists(comicinfo_path):
 		shutil.copy(modulefile_path, path)
