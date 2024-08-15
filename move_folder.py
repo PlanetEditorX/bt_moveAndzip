@@ -179,9 +179,9 @@ def uncbz_file(path):
 		zip.close()
 		# 重命名为标准文件夹名
 		os.rename(output + '\\' + folderName, newFolder)
-
+		# 复制ComicInfo.xml模板
+		comicinfo_exists(newFolder)
 		# 读取信息
-		shutil.copy(os.path.dirname(os.path.realpath(__file__)) + '\\ComicInfo.xml', newFolder)
 		with open(newFolder + '\\ComicInfo.xml', encoding = "utf-8") as file:
 			content = file.read()
 
@@ -253,6 +253,13 @@ def str_tag(lines, index):
 				break
 	return content[:-1]
 
+# 模板文件是否存在
+def comicinfo_exists(path):
+	modulefile_path = os.path.dirname(os.path.realpath(__file__)) + '\\ComicInfo.xml'
+	comicinfo_path = path + '\\ComicInfo.xml'
+	if not os.path.exists(comicinfo_path):
+		shutil.copy(modulefile_path, path)
+	return
 
 if len(sys.argv) > 1:
 	# 获取命令行参数
