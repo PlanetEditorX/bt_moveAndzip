@@ -99,10 +99,21 @@ def zip_file(path):
 	shutil.rmtree(path)
 	return
 
-# 解压zip文件
-# path 压缩包具体地址
+# 解压zip文件，返回作者信息
+# path：压缩包具体地址
 def unzip_file(path):
 	print(path, " is zip file")
+	if contains_file(path, 'info.json'):
+		author = get_form_info(path)
+	elif contains_file(path, 'meta.json'):
+		author = get_form_meta(path)
+	else:
+		author = ''
+	return author
+
+# 从info.json文件中获取数据
+# path：压缩包具体地址
+def get_form_info(path):
 	try:
 		with zipfile.ZipFile(path, "r") as zip_ref:
 			with zip_ref.open("info.json") as info:
@@ -121,6 +132,38 @@ def unzip_file(path):
 		print("JSONDecodeError:", str(e))
 		author = ''
 	return author
+
+# 从meta.json文件中获取数据
+# path：压缩包具体地址
+def get_form_meta(path):
+	try:
+		with zipfile.ZipFile(path, "r") as zip_ref:
+			with zip_ref.open("meta.json") as info:
+				conObject = json.loads(info.read().decode('utf-8'))
+		# 获取作者英文信息，并单词首字母大写
+		author = conObject['tags']['artist'][0].title()
+		if ("|" in author):
+			# 多个作者信息时取第一项，并删除空格
+			author = author.split("|")[0].replace(' ', '')
+	# 未获取到变量
+	except KeyError:
+		print("This ZIP file (" + path + ") does not contain author information")
+		author = ''
+	# JSONDecodeError异常
+	except json.decoder.JSONDecodeError as e:
+		print("JSONDecodeError:", str(e))
+		author = ''
+	return author
+
+# 判断压缩包是否包含指定文件
+# zip_path：压缩包路径
+# filename：文件名字
+def contains_file(zip_path, filename):
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as z:
+            return filename in z.namelist()
+    except zipfile.BadZipFile:
+        return False
 
 # 解压cbz文件
 # path 压缩包具体地址
