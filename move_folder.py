@@ -140,11 +140,8 @@ def get_form_meta(path):
 		with zipfile.ZipFile(path, "r") as zip_ref:
 			with zip_ref.open("meta.json") as info:
 				conentObject = json.loads(info.read().decode('utf-8'))
-		# 获取作者英文信息，并单词首字母大写
-		author = conentObject['tags']['artist'][0].title()
-		if ("|" in author):
-			# 多个作者信息时取第一项，并删除空格
-			author = author.split("|")[0].replace(' ', '')
+		# 获取作者英文信息
+		author = conentObject['tags']['artist'][0]
 		add_Comicinfo(path, conentObject)
 	# 未获取到变量
 	except KeyError:
@@ -154,7 +151,7 @@ def get_form_meta(path):
 	except json.decoder.JSONDecodeError as e:
 		print("JSONDecodeError:", str(e))
 		author = ''
-	return author
+	return author_format(author)
 
 # 提取信息
 def add_Comicinfo(path, obj):
@@ -302,6 +299,15 @@ def uncbz_file(path):
 	except FileNotFoundError:
 		print("This file not found")
 		author = ''
+	return author_format(author)
+
+# 作者仅保留一项,并大写首字母
+def author_format(author):
+	if ("|" in author):
+		# 多个作者信息时取第一项，并删除空格
+		author = author.split("|")[0].strip()
+	elif ("," in author):
+		author = author.split(",")[0].strip()
 	return author.title()
 
 # 标签处理
