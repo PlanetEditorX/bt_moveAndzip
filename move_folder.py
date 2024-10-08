@@ -199,8 +199,7 @@ def add_Comicinfo(path, obj):
 		zipf.write(output_modelfile, arcname='ComicInfo.xml')
 
 	# 删除生成的模板文件
-	if os.path.exists(output_modelfile):
-		os.remove(output_modelfile)
+	del_modelfile(output_modelfile)
 	return
 
 # 指定数组转字符串
@@ -337,14 +336,24 @@ def comicinfo_exists(path):
 		shutil.copy(modulefile_path, path)
 	return
 
+# 删除模板文件
+def del_modelfile(path):
+	# 删除生成的模板文件
+	if os.path.exists(path):
+		print(f"删除模板文件{path}")
+		print(f"{path}删除成功")
+		os.remove(path)
+
 if len(sys.argv) > 1:
 	# 获取命令行参数
 	move_folder(sys.argv[1])
 
 else:
 	# 直接运行移动当前目录下的文件夹
-	folder_list = os.listdir(os.getcwd())
+	root_path = os.getcwd()
+	print(f"运行目录为：{root_path}")
+	folder_list = os.listdir(root_path)
 	for folder_item in folder_list:
 		if ('[' in folder_item and ']' in folder_item or '【' in folder_item and '】' in folder_item or os.path.splitext(folder_item)[-1].lower() == '.zip'):
 			move_folder(os.getcwd() + "\\" + folder_item)
-
+	del_modelfile(f"{root_path}\\ComicInfo.xml")
