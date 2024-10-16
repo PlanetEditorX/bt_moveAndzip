@@ -94,7 +94,7 @@ def move_folder(path, _type='author'):
 		zip_file(new_path)
 
 	# 清理时间分类残留文件夹
-	if os.path.exists(current_path.exists()):
+	if _type == 'time' and os.path.exists(current_path.exists()):
 		if not list(current_path.iterdir()):
 			shutil.rmtree(current_path)
 	return
