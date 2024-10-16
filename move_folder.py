@@ -203,11 +203,16 @@ def add_Comicinfo(path, obj):
 	return
 
 # 指定数组转字符串
-def list_str(obj,list):
+def list_str(obj, _list):
+	"""
+	指定数组转字符串
+	:param obj: 原始对象
+    :param _list: 需要获取的属性数组
+	"""
 	content = ''
-	for name in list:
-		if name in list:
-			content = content + ','.join([str(x) for x in obj[name]]) + ','
+	for key in obj:
+		if key in _list:
+			content += ','.join([str(x) for x in obj[key]]) + ','
 
 	return content[:-1]
 
