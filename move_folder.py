@@ -5,15 +5,14 @@ import shutil
 import zipfile
 import json
 from datetime import datetime
+from pathlib import Path
 
 # 适用格式 [作品类型(作者)]
-def move_folder(path):
+def move_folder(path, _type='author'):
 	# 拆分目录
 	path_nums = path.split("\\")
-
 	# 待修改文件夹名字
 	name = path_nums.pop()
-
 	# 拼接为所在父目录
 	father_path = "\\".join(path_nums)
 	print("name=",name)
@@ -26,7 +25,7 @@ def move_folder(path):
 	# 如果是zip文件
 	if (os.path.splitext(name)[-1].lower() == '.zip'):
 		flag_zip = 1
-		author = unzip_file(path)
+		author = unzip_file(path, _type)
 	# 如果是cbz文件
 	elif(os.path.splitext(name)[-1].lower() == '.cbz'):
 		flag_zip = 2
@@ -56,7 +55,14 @@ def move_folder(path):
 			author = "Other"
 
 	# 需要创建的作者目录
-	new_folder = father_path + '\\' + author
+	if _type == 'time':
+		current_path = Path(father_path)
+		path_nums = father_path.split("\\")
+		path_nums.pop()
+		father_path = "\\".join(path_nums)
+		new_folder = father_path + '\\' + author
+	else:
+		new_folder = father_path + '\\' + author
 
 	# 判断文件夹是否存在
 	if not os.path.exists(new_folder):
@@ -86,6 +92,11 @@ def move_folder(path):
 	# 如果不是zip文件
 	if (flag_zip == 0 or flag_zip == 2):
 		zip_file(new_path)
+
+	# 清理时间分类残留文件夹
+	if os.path.exists(current_path.exists()):
+		if not list(current_path.iterdir()):
+			shutil.rmtree(current_path)
 	return
 
 # 压缩文件夹
@@ -101,28 +112,35 @@ def zip_file(path):
 
 # 解压zip文件，返回作者信息
 # path：压缩包具体地址
-def unzip_file(path):
+# _type: 返回的类型，默认为author，为time时返回时间
+def unzip_file(path, _type='author'):
 	print(path, " is zip file")
 	if contains_file(path, 'info.json'):
-		author = get_form_info(path)
+		author = get_form_info(path, _type)
 	elif contains_file(path, 'meta.json'):
-		author = get_form_meta(path)
+		author = get_form_meta(path, _type)
 	else:
 		author = ''
 	return author
 
 # 从info.json文件中获取数据
 # path：压缩包具体地址
-def get_form_info(path):
+def get_form_info(path, _type='author'):
 	try:
 		with zipfile.ZipFile(path, "r") as zip_ref:
 			with zip_ref.open("info.json") as info:
 				conentObject = json.loads(info.read().decode('utf-8'))['gallery_info']
-		# 获取作者英文信息，并单词首字母大写
-		author = conentObject['tags']['artist'][0].title()
-		if ("|" in author):
-			# 多个作者信息时取第一项，并删除空格
-			author = author.split("|")[0].replace(' ', '')
+		if _type == 'time':
+			if conentObject['upload_date']:
+				author = str(conentObject['upload_date'][0])
+			else:
+				author = 'Undefined Time'
+		else:
+			# 获取作者英文信息，并单词首字母大写
+			author = conentObject['tags']['artist'][0].title()
+			if ("|" in author):
+				# 多个作者信息时取第一项，并删除空格
+				author = author.split("|")[0].replace(' ', '')
 	# 未获取到变量
 	except KeyError:
 		print("This ZIP file (" + path + ") does not contain author information")
@@ -135,14 +153,20 @@ def get_form_info(path):
 
 # 从meta.json文件中获取数据
 # path：压缩包具体地址
-def get_form_meta(path):
+def get_form_meta(path, _type='author'):
 	try:
 		with zipfile.ZipFile(path, "r") as zip_ref:
 			with zip_ref.open("meta.json") as info:
 				conentObject = json.loads(info.read().decode('utf-8'))
-		# 获取作者英文信息
-		author = conentObject['tags']['artist'][0]
-		add_Comicinfo(path, conentObject)
+		if _type == 'time':
+			if conentObject['upload_date']:
+				author = str(conentObject['upload_date'][0])
+			else:
+				author = 'Undefined Time'
+		else:
+			# 获取作者英文信息
+			author = conentObject['tags']['artist'][0]
+			add_Comicinfo(path, conentObject)
 	# 未获取到变量
 	except KeyError:
 		print("This ZIP file (" + path + ") does not contain author information")
@@ -351,7 +375,27 @@ def del_modelfile(path):
 
 if len(sys.argv) > 1:
 	# 获取命令行参数
-	move_folder(sys.argv[1])
+	if sys.argv[1] == 'time':
+		root_path = os.getcwd()
+		print(f"运行目录为：{root_path}")
+		folder_list = os.listdir(root_path)
+		path = Path(root_path)
+		files = [file for file in path.rglob("*.*")]
+		path_dict = {}
+		for file in files:
+			if file.suffix in ['.zip', '.cbz']:
+				father_path = file.parent._raw_paths[0]
+				if father_path in path_dict:
+					path_dict[father_path].append(file)
+				else:
+					path_dict[father_path] = [file]
+
+		# 仅移动只有一项的
+		for key,value in path_dict.items():
+			if len(value) == 1:
+				move_folder(value[0]._raw_paths[0], 'time')
+	else:
+		move_folder(sys.argv[1])
 
 else:
 	# 直接运行移动当前目录下的文件夹
